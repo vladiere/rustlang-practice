@@ -1,0 +1,38 @@
+[package]
+name = "cpclibrary"
+version = "0.0.0"
+description = "CPC Library desktop app for librarian admins"
+authors = ["you"]
+license = "Apache"
+repository = ""
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = ["config-toml"] }
+
+[dependencies]
+tauri = { version = "1.6", features = ["shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# serde_with = "3.4"
+# serde_with_macros = "3.7"
+
+# sqlx = { version = "0.7", features = [ "runtime-tokio-rustls", "postgres", "macros", "uuid", "time" ] } 
+tokio = { version = "1", features = ["full"] }
+dotenv = "0.15"
+thiserror = "1"
+modql = "0.3"
+
+#---- Others
+# lazy-regex = "3.1.0"
+# async-trait = "0.1.77"
+# strum_macros = "0.26"
+# uuid = { version = "1.6.1", features = ["v4", "fast-rng"] }
+# parking_lot = "0.12"
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

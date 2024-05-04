@@ -1,0 +1,27 @@
+# Cargo config file.
+# See: https://doc.rust-lang.org/cargo/reference/config.html
+
+# Environments variables set for all `cargo ...` commans.
+[env]
+
+# Scope down tracing, to filter out external lib tracing
+RUST_LOG="animals_shelter=debug"
+
+# ---- Service Environment Variables
+# IMPORTANT:
+# For cargo commands only.
+# For deployed env, should be managed by container
+# (e.g., Kubernetes).
+
+## ---- Secrets
+# Keys and passwords below are for localhost DEV ONLY.
+# e.g., "user_pass" type of passwords.
+# i.e., Encryption not needed cause that will be managed by containers when deploy.
+
+SERVICE_DB_URL="postgres://shelter_dev:dev_only_pwd@localhost/animals_shelter"
+
+## ---- ConfigMap
+
+# This will be relative to Cargo.toml
+# In deployed images, probably use absolute path.
+# SERVICE_WEB_FOLDER="web-folder/"

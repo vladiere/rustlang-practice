@@ -1,0 +1,95 @@
+name: 'TauriPublish'
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+    branches:
+      - release
+      - main
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install Rust nightly
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          targets: wasm32-unknown-unknown
+
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Linux
+        if: matrix.platform == 'ubuntu-latest'
+        id: cuda-toolkit-linux
+        with:
+          cuda: '12.2.0'
+          method: 'network'
+          non-cuda-sub-packages: '["libcublas","libcublas-dev"]'
+          sub-packages: '["nvcc","compiler","libraries","libraries-dev","cudart","cudart-dev"]'
+
+      - uses: Jimver/cuda-toolkit@v0.2.11
+        name: Install CUDA toolkit on Windows
+        if: matrix.platform == 'windows-latest'
+        id: cuda-toolkit-windows
+        with:
+          cuda: '12.2.0'
+          method: 'local'
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf llvm clang
+      - name: install dependencies (macos only)
+        if: matrix.platform == 'macos-latest'
+        run: |
+          brew install llvm
+      # - name: Sync node version and setup cache
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 'latest'
+      #     cache: 'npm'
+      - name: install frontend dependencies
+        run: |
+          npm install --save-exact esbuild
+          npm install -D tailwindcss
+          npm i -D daisyui@latest
+          cargo install --locked trunk
+          cargo install --locked wasm-bindgen-cli
+      - name: install frontend dependencies (windows only)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          npm install -g npx
+      - name: show versions
+        run: |
+          rustc --version
+          npm --version
+          npx --version
+          cargo --version
+          trunk --version
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: false
+          prerelease: false
+      # - name: Create 'latest' tag alias
+      #   run: |
+      #     LATEST_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+      #     git tag -d latest || true
+      #     git tag latest $LATEST_TAG
+      #     git push origin :refs/tags/latest || true
+      #     git push origin --tags
